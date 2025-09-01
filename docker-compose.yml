@@ -1,0 +1,20 @@
+version: '3.7'
+services:
+  postgres:
+    image: postgres:15  # Используем PostgreSQL 15
+    container_name: vtb-postgres
+    environment:
+      POSTGRES_USER: postgres        # Имя пользователя для базы
+      POSTGRES_PASSWORD: example     # Пароль для пользователя
+      POSTGRES_DB: mydb              # Имя базы данных
+    ports:
+      - "5433:5432"                  # Прокси порт для доступа
+    volumes:
+      - postgres_data:/var/lib/postgresql/data  # Монтирование для сохранения данных
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql  # Скрипт инициализации базы
+    restart: always  # Перезапуск контейнера в случае сбоя
+    command: ["postgres", "-c", "shared_preload_libraries=pg_stat_statements"]
+
+volumes:
+  postgres_data:  # Для сохранения данных между перезапусками
+    driver: local
