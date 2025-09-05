@@ -11,10 +11,28 @@ services:
       - "5433:5432"                  # Прокси порт для доступа
     volumes:
       - postgres_data:/var/lib/postgresql/data  # Монтирование для сохранения данных
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql  # Скрипт инициализации базы
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql  # Инициализация базы
+    restart: always  # Перезапуск контейнера в случае сбоя
+    command: ["postgres", "-c", "shared_preload_libraries=pg_stat_statements"]
+
+  postgres2:
+    image: postgres:15  # Второй контейнер с PostgreSQL 15
+    container_name: vtb-postgres2
+    environment:
+      POSTGRES_USER: postgres        # Имя пользователя для базы
+      POSTGRES_PASSWORD: example     # Пароль для пользователя
+      POSTGRES_DB: pagila             # Имя базы данных для второго контейнера
+    ports:
+      - "5434:5432"                  # Прокси порт для доступа
+    volumes:
+      - postgres_data2:/var/lib/postgresql/data  # Монтирование для сохранения данных
+      - ./pagila-data.sql:/docker-entrypoint-initdb.d/pagila-data.sql  # Схема
+      - ./pagila-insert-data.sql:/docker-entrypoint-initdb.d/pagila-insert-data.sql  # Вставка данных
     restart: always  # Перезапуск контейнера в случае сбоя
     command: ["postgres", "-c", "shared_preload_libraries=pg_stat_statements"]
 
 volumes:
-  postgres_data:  # Для сохранения данных между перезапусками
+  postgres_data:  # Для сохранения данных между перезапусками первого контейнера
+    driver: local
+  postgres_data2: # Для сохранения данных между перезапусками второго контейнера
     driver: local
