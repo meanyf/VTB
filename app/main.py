@@ -4,16 +4,38 @@ from stats_analysis import analyze_stats
 from DB_tuning import get_postgres_recommendations
 from find_N import analyze_n_plus_one
 from index_recommend import analyze_indexes  # <-- импорт
+import os
 
+import time
+import psycopg
 
-def get_db_connection():
-    return psycopg.connect(
-        host="localhost",
-        port="5434",
-        dbname="pagila",
-        user="readonly_user",
-        password="readonly_password",
-    )
+def get_db_connection(max_retries=60, delay=2):
+    db_url = os.getenv("DATABASE_URL")
+
+    for attempt in range(1, max_retries + 1):
+        try:
+            print(f"[{attempt}] Попытка подключения к базе данных...")
+            if db_url:
+                conn = psycopg.connect(db_url)
+            else:
+                conn = psycopg.connect(
+                    host="localhost",
+                    port="5434",
+                    dbname="pagila",
+                    user="readonly_user",
+                    password="readonly_password",
+                )
+
+            print("✅ Подключение успешно.")
+            return conn
+
+        except psycopg.OperationalError as e:
+            print("⏳ Идёт загрузка данных в базу или база ещё не готова.")
+            print(f"🔁 Повтор через {delay} секунд...\n")
+            time.sleep(delay)
+
+    print("❌ Не удалось подключиться к базе данных после нескольких попыток.")
+    raise RuntimeError("Подключение к базе данных не удалось.")
 
 
 def menu():
