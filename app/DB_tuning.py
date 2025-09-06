@@ -1,5 +1,5 @@
+from psycopg import rows
 import psutil
-import psycopg2.extras
 import json
 
 PARAMS = ["shared_buffers", "effective_cache_size", "work_mem", "maintenance_work_mem"]
@@ -22,7 +22,7 @@ def recommend_postgres_settings(ram_gb: int, max_connections: int):
 
 
 def get_postgres_recommendations(conn):
-    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur = conn.cursor(row_factory=rows.dict_row)
 
     # Получаем max_connections
     cur.execute("SHOW max_connections;")
@@ -32,7 +32,7 @@ def get_postgres_recommendations(conn):
         print("Ошибка: не удалось получить значение max_connections.")
         return
 
-    max_connections = int(max_connections_row[0])
+    max_connections = int(max_connections_row["max_connections"])
 
     # Получаем объем RAM на сервере
     total_ram_gb = round(psutil.virtual_memory().total / (1024**3))
@@ -44,7 +44,9 @@ def get_postgres_recommendations(conn):
     current = {}
     for param in PARAMS:
         cur.execute(f"SHOW {param};")
-        current[param] = cur.fetchone()[0]
+        row = cur.fetchone()
+        if row is not None and param in row:
+            current[param] = row[param]
 
     print("PostgreSQL settings (current vs recommended):")
     result = {}

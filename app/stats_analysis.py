@@ -1,4 +1,4 @@
-import psycopg2.extras
+from psycopg import rows
 import json
 
 
@@ -72,7 +72,7 @@ def generate_autovacuum_recommendations(agg):
 
 def analyze_stats(query, conn):
     # Выполним запрос, чтобы получить статистику
-    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur = conn.cursor(row_factory=rows.dict_row)
 
     # Получаем статистику по данному запросу, если это SELECT, INSERT, UPDATE или DELETE
     cur.execute(

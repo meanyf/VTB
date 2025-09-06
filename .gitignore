@@ -1,0 +1,59 @@
+# Python bytecode files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+.env/
+env/
+.venv/
+
+# VS Code settings
+.vscode/
+
+# Docker files
+docker-compose.override.yml
+.docker/
+
+# IDE-specific files
+.idea/
+*.swp
+*~
+*.sublime-workspace
+*.sublime-project
+
+# Logs
+*.log
+
+# Python distribution / packaging
+*.egg-info/
+dist/
+build/
+eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+
+# Test output
+.coverage
+nosetests.xml
+test-reports/
+*.cover
+
+# MyPy
+.mypy_cache/
+.dmypy.json
+.dmypy.json.#
+
+# Pytest
+.cache/
+
+# Pylint
+pylint-report.txt
+pylint-global-rcfile

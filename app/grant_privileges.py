@@ -1,10 +1,10 @@
-import psycopg2
+import psycopg
 
 # Подключаемся под суперпользователем
-conn = psycopg2.connect(
+conn = psycopg.connect(
     host="localhost",
-    port="5433",
-    database="pagila",
+    port="5434",
+    dbname="pagila",
     user="postgres",  # суперпользователь
     password="example",  # пароль суперпользователя
 )
@@ -13,6 +13,8 @@ cur = conn.cursor()
 
 # Имя пользователя, которому будем давать права
 readonly_user = "readonly_user"
+
+cur.execute("CREATE USER readonly_user WITH PASSWORD 'readonly_password';")
 
 # 1. Даем права на подключение к базе
 cur.execute(f"GRANT CONNECT ON DATABASE pagila TO {readonly_user};")

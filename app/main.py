@@ -1,5 +1,4 @@
-import psycopg2
-import psycopg2.extras
+import psycopg
 from explain_analyze import run_explain
 from stats_analysis import analyze_stats
 from DB_tuning import get_postgres_recommendations
@@ -8,10 +7,10 @@ from index_recommend import analyze_indexes  # <-- импорт
 
 
 def get_db_connection():
-    return psycopg2.connect(
+    return psycopg.connect(
         host="localhost",
-        port="5433",
-        database="pagila",
+        port="5434",
+        dbname="pagila",
         user="readonly_user",
         password="readonly_password",
     )

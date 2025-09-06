@@ -4,7 +4,7 @@ import logging
 from typing import Any, List, Tuple
 from decimal import Decimal
 
-import psycopg2.extras
+from psycopg import rows
 
 
 MIN_CALLS = 100  # минимум вызовов
@@ -41,7 +41,7 @@ def detect_time_columns(cur) -> Tuple[str, str]:
           AND column_name IN ('total_exec_time','mean_exec_time','total_time','mean_time')
         """
     )
-    cols = {row[0] for row in cur.fetchall()}
+    cols = {row["column_name"] for row in cur.fetchall()}
 
     if "total_exec_time" in cols and "mean_exec_time" in cols:
         return "total_exec_time", "mean_exec_time"
@@ -63,7 +63,7 @@ def _to_float(value: Any) -> float:
 
 
 def fetch_stat_rows(conn) -> List[dict]:
-    with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
+    with conn.cursor(row_factory=rows.dict_row) as cur:
         total_col, mean_col = detect_time_columns(cur)
 
         allowed = {"total_exec_time", "mean_exec_time", "total_time", "mean_time"}

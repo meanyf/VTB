@@ -1,6 +1,4 @@
-import psycopg2.extras
-
-
+from psycopg import rows
 def print_plan_node(node, indent=0):
     prefix = "  " * indent
     print(f"{prefix}Node Type: {node.get('Node Type')}")
@@ -69,7 +67,7 @@ def print_plan_node(node, indent=0):
 
 def run_explain(query, conn, label="EXPLAIN"):
     print(f"\n=== {label} ===")
-    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur = conn.cursor(row_factory=rows.dict_row)
     cur.execute(f"EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) {query}")
     plan_raw = cur.fetchone()["QUERY PLAN"]
     top_plan = plan_raw[0]["Plan"]
