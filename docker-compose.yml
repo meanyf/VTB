@@ -18,6 +18,22 @@ services:
     restart: always
     command: ["postgres", "-c", "shared_preload_libraries=pg_stat_statements"]
 
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: vtb-python-app
+    container_name: vtb-python-app
+    depends_on:
+      - postgres2
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgres://postgres:example@postgres2:5432/pagila
+    volumes:
+      - ./app:/app/app
+    restart: unless-stopped
+
 volumes:
   postgres_data2:
     driver: local
