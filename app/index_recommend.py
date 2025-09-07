@@ -66,6 +66,15 @@ def recommend_indexes(sql_query: str):
 def analyze_indexes(query: str, conn=None):
     """Обёртка для вызова из меню (в стиле run_explain, analyze_stats)."""
     print("\nРекомендации по индексам:")
-    indexes = recommend_indexes(query)
-    for idx in indexes:
-        print("-", idx)
+    try:
+        # Проверяем корректность запроса через EXPLAIN
+        with conn.cursor() as cur:
+            cur.execute(f"EXPLAIN {query}")
+
+        # Если EXPLAIN прошел успешно — вызываем рекомендации
+        indexes = recommend_indexes(query)
+
+        for idx in indexes:
+            print("-", idx)
+    except Exception as e:
+        print(f"❌ Ошибка в SQL запросе: {e}")
