@@ -79,9 +79,17 @@ def get_db_connection(max_retries=60, delay=2):
 
 
 def execute(func, *args, **kwargs):
+    conn = kwargs.get("conn") or (args[1] if len(args) > 1 else None)
+
     try:
         func(*args, **kwargs)
     except Exception as e:
+        if conn:
+            try:
+                conn.rollback()
+            except Exception as rollback_error:
+                print(f"⚠️ Ошибка при откате транзакции: {rollback_error}")
+
         print(f"❌ Ошибка при выполнении: {e}")
 
 
@@ -103,8 +111,7 @@ def menu():
             query = input("Введите SQL запрос: ")
             execute(run_explain, query, conn)
         elif choice == "2":
-            query = input("Введите SQL запрос: ")
-            execute(analyze_stats, query, conn)
+            execute(analyze_stats, conn=conn)
         elif choice == "3":
             execute(get_postgres_recommendations, conn)
         elif choice == "4":

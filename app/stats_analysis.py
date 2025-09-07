@@ -70,7 +70,7 @@ def generate_autovacuum_recommendations(agg):
     return recs
 
 
-def analyze_stats(query, conn):
+def analyze_stats(conn):
     # Выполним запрос, чтобы получить статистику
     cur = conn.cursor(row_factory=rows.dict_row)
 
@@ -79,11 +79,9 @@ def analyze_stats(query, conn):
         """
         SELECT query, calls, rows, mean_exec_time
         FROM pg_stat_statements
-        WHERE query LIKE %s
         ORDER BY calls DESC
         LIMIT 100;
-        """,
-        ("%" + query + "%",),
+        """
     )
 
     stats = cur.fetchall()
