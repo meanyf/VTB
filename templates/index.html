@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PG Analyzer — интерфейс</title>
+    <style>
+      /* Простой минималистичный стиль */
+      :root{font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#111}
+      body{margin:0;padding:24px;background:#f7fafc}
+      .container{max-width:1100px;margin:0 auto}
+      header{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+      h1{margin:0;font-size:20px}
+      .card{background:#fff;border-radius:12px;padding:16px;box-shadow:0 6px 18px rgba(7,11,27,0.06);margin-bottom:14px}
+      label{display:block;font-size:13px;margin-bottom:6px}
+      input[type=text], input[type=password], textarea{width:100%;padding:10px;border:1px solid #e6e9ef;border-radius:8px}
+      .grid{display:grid;grid-template-columns:1fr 360px;gap:14px}
+      .row{display:flex;gap:8px}
+      button{padding:8px 12px;border-radius:8px;border:0;background:#2563eb;color:white;cursor:pointer}
+      button.secondary{background:#6b7280}
+      .small{font-size:13px;color:#6b7280}
+      pre{white-space:pre-wrap;word-wrap:break-word;font-family:Menlo,monospace,monospace;font-size:13px}
+      .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+      .db-params{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+      .footer{font-size:12px;color:#6b7280;margin-top:8px}
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='36' height='36'><rect rx='6' width='36' height='36' fill='%232563eb'/><text x='50%' y='55%' text-anchor='middle' font-family='Arial' font-size='18' fill='white'>PG</text></svg>" alt="logo" style="width:40px;height:40px;border-radius:8px;"/>
+        <div>
+          <h1>PG Analyzer — инструмент для анализа запросов</h1>
+          <div class="small">Поддерживается: explain, анализ статистик, N+1, рекомендации по индексам и тюнингу</div>
+        </div>
+      </header>
+
+      <div class="grid">
+        <div>
+          <div class="card">
+            <label for="query">SQL запрос</label>
+            <textarea id="query" rows="6" placeholder="Например: SELECT * FROM actor WHERE actor_id &lt; 10;"></textarea>
+
+            <div style="margin-top:12px">
+              <label>Параметры подключения (необязательно)</label>
+              <div class="db-params">
+                <input id="host" type="text" placeholder="host (например localhost)" />
+                <input id="port" type="text" placeholder="port (5432)" />
+                <input id="dbname" type="text" placeholder="dbname (pagila)" />
+                <input id="user" type="text" placeholder="user" />
+                <input id="password" type="password" placeholder="password" />
+              </div>
+              <div class="small" style="margin-top:8px">Оставьте поля пустыми — будут использованы значения по умолчанию в сервере.</div>
+            </div>
+
+            <div class="controls">
+              <button id="btn-run-explain">Run EXPLAIN</button>
+              <button id="btn-analyze-indexes">Analyze Indexes</button>
+              <button id="btn-analyze-stats" class="secondary">Analyze Stats</button>
+              <button id="btn-get-recs" class="secondary">Get PG Recommendations</button>
+              <button id="btn-nplus1" class="secondary">Find N+1</button>
+              <button id="btn-clear" class="secondary">Clear Result</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <label>Результат</label>
+            <pre id="result">Ничего не запущено.</pre>
+            <div class="footer">JSON результат выводится в удобочитаемом виде. Для больших результатов — скачайте через DevTools.</div>
+          </div>
+        </div>
+
+        <aside>
+          <div class="card">
+            <label>Журнал операций</label>
+            <div id="log" style="max-height:420px;overflow:auto"><div class="small">Здесь отображаются уведомления о действиях.</div></div>
+          </div>
+
+          <div class="card">
+            <label>Подсказки</label>
+            <ul>
+              <li class="small">Run EXPLAIN — выполнит explain для введённого запроса.</li>
+              <li class="small">Analyze Indexes — найдёт рекомендации по индексам на основе запроса.</li>
+              <li class="small">Analyze Stats — выполнит анализ статистик БД (без запроса).</li>
+              <li class="small">Get PG Recommendations — общие рекомендации по настройке PostgreSQL.</li>
+              <li class="small">Find N+1 — попытается выявить кандидаты на N+1 проблему.</li>
+            </ul>
+          </div>
+        </aside>
+      </div>
+
+    </div>
+
+    <!-- Подключаем статический JS через URL, предоставляемый FastAPI -->
+    <script src="{{ request.url_for('static', path='script.js') }}"></script>
+  </body>
+</html>
