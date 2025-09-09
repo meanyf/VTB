@@ -14,16 +14,16 @@ python -m venv venv
 source venv/bin/activate
 
 pip install -r requirements.txt
-python app/main.py
 uvicorn app.main:app --reload
 
 ```
 
-## 3. Запуск через Docker
+## 3. Запуск через Docker. Перейдите по адресу localhost:8002
 ```bash
 docker-compose -f docker-compose.yml build app
 docker-compose -f docker-compose.yml run --rm --service-ports app
 ```
+
 
 ## 4. Очистка ресурсов
 ```bash
