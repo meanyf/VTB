@@ -59,3 +59,4 @@ def get_postgres_recommendations(conn):
     print(json.dumps(result, indent=4))
 
     cur.close()
+    return result

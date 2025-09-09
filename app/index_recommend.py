@@ -78,5 +78,6 @@ def analyze_indexes(query: str, conn=None):
             print("-", idx)
     except Exception as e:
         print(f"❌ Ошибка в SQL запросе: {e}")
+        return f"❌ Ошибка в SQL запросе: {e}"
         conn.rollback()
-
+    return indexes

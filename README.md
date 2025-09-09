@@ -15,12 +15,14 @@ source venv/bin/activate
 
 pip install -r requirements.txt
 python app/main.py
+uvicorn app.main:app --reload
+
 ```
 
 ## 3. Запуск через Docker
 ```bash
 docker-compose -f docker-compose.yml build app
-docker-compose -f docker-compose.yml run --rm app
+docker-compose -f docker-compose.yml run --rm --service-ports app
 ```
 
 ## 4. Очистка ресурсов

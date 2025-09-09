@@ -1,55 +1,160 @@
-body {
-    font-family: Arial, sans-serif;
-    background-color: #f4f4f4;
+/* Установка базовых стилей */
+:root {
+    font-family: Inter, system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    color: #111;
+  }
+  
+  body {
     margin: 0;
-    padding: 0;
-}
-
-.container {
-    max-width: 800px;
-    margin: 50px auto;
-    background-color: white;
-    padding: 20px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-}
-
-h1 {
-    text-align: center;
-    color: #333;
-}
-
-form {
+    padding: 24px;
+    background: #f7fafc;
+  }
+  
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  
+  header {
     display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-textarea {
-    padding: 10px;
-    font-size: 16px;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+  
+  h1 {
+    margin: 0;
+    font-size: 20px;
+  }
+  
+  .card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 6px 18px rgba(7, 11, 27, 0.06);
+    margin-bottom: 14px;
+  }
+  
+  label {
+    display: block;
+    font-size: 13px;
+    margin-bottom: 6px;
+  }
+  
+  input[type="text"],
+  input[type="password"],
+  textarea {
     width: 100%;
-    height: 150px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-}
-
-button {
     padding: 10px;
-    font-size: 16px;
-    background-color: #4CAF50;
+    border: 1px solid #e6e9ef;
+    border-radius: 8px;
+  }
+  
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 14px;
+  }
+  
+  .row {
+    display: flex;
+    gap: 8px;
+  }
+  
+  button {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 0;
+    background: #2563eb;
     color: white;
-    border: none;
-    border-radius: 4px;
     cursor: pointer;
-}
-
-button:hover {
-    background-color: #45a049;
-}
-
-#result {
-    margin-top: 20px;
-    padding: 10px;
-    background-color: #f9f9f9;
-    border: 1px solid #ddd;
-}
+  }
+  
+  button.secondary {
+    background: #6b7280;
+  }
+  
+  .small {
+    font-size: 13px;
+    color: #6b7280;
+  }
+  
+  pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-family: Menlo, monospace, monospace;
+    font-size: 13px;
+  }
+  
+  .controls {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+  
+  .db-params {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  
+  .footer {
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 8px;
+  }
+  
+  /* Стили для радиокнопок */
+  input[type="radio"] {
+    display: none; /* Скрываем стандартные радиокнопки */
+  }
+  
+  label[for="db-pagila"], label[for="db-custom"] {
+    display: inline-block;
+    padding: 10px 18px;
+    background-color: #f3f4f6;
+    border: 2px solid #e6e9ef;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-right: 12px;
+  }
+  
+  label[for="db-pagila"]:hover, label[for="db-custom"]:hover {
+    background-color: #e6e9ef;
+  }
+  
+  input[type="radio"]:checked + label {
+    background-color: #2563eb;
+    color: white;
+    border-color: #2563eb;
+  }
+  
+  /* Стили для отображения формы с параметрами базы данных */
+  #custom-db-params {
+    margin-top: 16px;
+  }
+  
+  #custom-db-params input {
+    margin-bottom: 10px;
+  }
+  
+  /* Мелкие стили для других элементов */
+  input[type="radio"]:not(:checked) + label {
+    color: #6b7280;
+  }
+  
+  /* Установим стиль для кнопки "Сохранить" */
+#btn-save-db {
+    background-color: #10b981; /* Зеленый цвет для выделения */
+    color: white;
+    border: 2px solid #10b981;
+    transition: all 0.3s ease;
+  }
+  
+  #btn-save-db:hover {
+    background-color: #059669;
+    border-color: #059669;
+  }
+  

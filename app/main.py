@@ -1,132 +1,221 @@
+from pydantic import BaseModel
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
+
+# Подключение к базе данных и другие необходимые импорты
 import psycopg
-from explain_analyze import run_explain
-from stats_analysis import analyze_stats
-from DB_tuning import get_postgres_recommendations
-from find_N import analyze_n_plus_one
-from index_recommend import analyze_indexes  # <-- импорт
+import time
 import os
 
-import time
-import psycopg
+# Импортируем функции для анализа
+from app.explain_analyze import run_explain
+from app.stats_analysis import analyze_stats
+from app.DB_tuning import get_postgres_recommendations
+from app.find_N import analyze_n_plus_one
+from app.index_recommend import analyze_indexes
 
+app = FastAPI()
+
+# Настройка шаблонов и статичных файлов
+templates = Jinja2Templates(directory="templates")
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+
+# Модель для запроса
+class QueryRequest(BaseModel):
+    query: str
+
+
+import psycopg
+import time
+import logging
+
+# Настройка логгера
+logging.basicConfig(
+    level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
+import logging
+import psycopg
+import time
 import os
-import time
+
+import logging
 import psycopg
-
-
+import time
 import os
-import time
+import logging
 import psycopg
+import time
+import os
+import socket
+import asyncio
 
-def get_db_connection(max_retries=60, delay=2):
-    # Надежное определение — находимся ли мы внутри Docker-контейнера
-    in_docker = True if os.getenv("DATABASE_URL") else False
+logging.basicConfig(
+    level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
 
-    use_custom = (
-        input("Хотите ввести свои данные для подключения? (y/n) [n]: ").strip().lower() == "y"
-    )
 
-    # Значения по умолчанию в зависимости от среды
-    host_default = "postgres2" if in_docker else "localhost"
-    port_default = "5432" if in_docker else "5434"
-    dbname_default = "pagila"
-    user_default = "readonly_user"
-    password_default = "readonly_password"
+def is_port_open(host: str, port: int, timeout: float = 1.0) -> bool:
+    try:
+        # быстрый проверочный TCP connect с малым таймаутом
+        with socket.create_connection((host, port), timeout=timeout):
+            return True
+    except OSError:
+        return False
 
-    if use_custom:
-        print("\nВведите параметры подключения к базе данных.")
-        print("Просто нажмите Enter, чтобы использовать значение по умолчанию, указанное в []:\n")
-
-        host_input = input(f"Введите host [{host_default}]: ").strip() or host_default
-
-        # Если в докере и ввели localhost, заменяем на host.docker.internal (локальный хост машины)
-        if in_docker and host_input.lower() == "localhost":
+in_docker = bool(os.getenv("DATABASE_URL"))
+user_dict = {}
+def get_db_connection(max_retries=60, delay=2, connect_timeout=3):
+    # print(user_dict and db_choice == 'custom')
+    if user_dict and db_choice == 'custom' :
+        host = user_dict['host']
+        if in_docker and host.lower() == "localhost":
             host = "host.docker.internal"
-            print("ℹ️ 'localhost' в Docker заменён на 'host.docker.internal'")
-        else:
-            # Для удалённого сервера или любого другого хоста используем как есть
-            host = host_input
-        print(host)
-        port = input(f"  ➤ Port [{port_default}]: ").strip() or port_default
-        dbname = input(f"  ➤ Название базы данных [{dbname_default}]: ").strip() or dbname_default
-        user = input(f"  ➤ Пользователь [{user_default}]: ").strip() or user_default
-        password = input(f"  ➤ Пароль [{password_default}]: ").strip() or password_default
+        port = user_dict['port']
+        dbname = user_dict['dbname']
+        user = user_dict['user']
+        password = user_dict['password']
     else:
-        host = host_default
-        port = port_default
-        dbname = dbname_default
-        user = user_default
-        password = password_default
-
-    # Формируем строку подключения
-    db_url = f"postgres://{user}:{password}@{host}:{port}/{dbname}"
-    print(f"\n📡 Используем строку подключения: {db_url}\n")
-
+        host = "postgres2" if in_docker else "127.0.0.1"
+        port = 5432 if in_docker else 5434
+        dbname = "pagila"
+        user = "readonly_user"
+        password = "readonly_password"
+    print(dbname)
     for attempt in range(1, max_retries + 1):
+        if not is_port_open(host, port, timeout=1.0):
+            print(
+                f"Попытка {attempt}: tcp {host}:{port} недоступен — пропускаем попытку.",
+                flush=True,
+            )
+            asyncio.sleep(delay)
+            continue
+
         try:
-            print(f"[{attempt}] Попытка подключения к базе данных...")
-            conn = psycopg.connect(db_url)
-            print("✅ Подключение успешно.")
+            conn = psycopg.connect(
+                host=host,
+                port=port,
+                dbname=dbname,
+                user=user,
+                password=password,
+                connect_timeout=connect_timeout,
+            )
             return conn
+        except Exception as e:
+            print(f"Попытка {attempt}: Ошибка подключения: {e}", flush=True)
+            asyncio.sleep(delay)
 
-        except psycopg.OperationalError as e:
-            print(f"⏳ Ошибка подключения: {e}")
-            print(f"🔁 Повтор через {delay} секунд...\n")
-            time.sleep(delay)
-
-    print("❌ Не удалось подключиться к базе данных после нескольких попыток.")
     raise RuntimeError("Подключение к базе данных не удалось.")
 
+db_choice = ""
 
-def execute(func, *args, **kwargs):
-    conn = kwargs.get("conn") or (args[1] if len(args) > 1 else None)
 
+@app.post("/save_db_choice/")
+async def save_db_choice(db_choice_data: dict):
+    global db_choice
     try:
-        func(*args, **kwargs)
+        # Извлекаем строку db_choice из переданных данных
+        db_choice = db_choice_data.get("db_choice", "")
+        print(f"Сохранено состояние dbChoice: {db_choice}")  # Для логирования
+        return {"success": True}
     except Exception as e:
-        if conn:
-            try:
-                conn.rollback()
-            except Exception as rollback_error:
-                print(f"⚠️ Ошибка при откате транзакции: {rollback_error}")
-
-        print(f"❌ Ошибка при выполнении: {e}")
+        raise HTTPException(status_code=500, detail=f"Ошибка при сохранении: {str(e)}")
 
 
-def menu():
+@app.get("/", response_class=HTMLResponse)
+async def home(request: Request):
+    try:
+        conn = await asyncio.to_thread(get_db_connection)
+    except asyncio.CancelledError:
+        print("Запрос прерван (shutdown).", flush=True)
+        raise
+    except Exception as e:
+        print(f"Ошибка при подключении к БД: {e}", flush=True)
+        raise HTTPException(status_code=500, detail="DB connection failed")
+    else:
+        conn.close()
+        return templates.TemplateResponse("index.html", {"request": request})
+
+
+# Модель для валидации параметров запроса
+class DbParams(BaseModel):
+    host: str
+    port: str
+    dbname: str
+    user: str
+    password: str
+
+# Новый обработчик для сохранения параметров подключения и вывода их в ответ
+@app.post("/save_db_params/")
+async def save_db_params(db_params: DbParams):
+    global user_dict  # Указываем, что мы используем глобальную переменную
+    try:
+        # Просто возвращаем полученные параметры
+        print(db_params.dict())
+        user_dict = db_params.dict()
+        return {"success": True, "saved_db_params": db_params.dict()}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Ошибка при сохранении: {str(e)}")
+
+
+@app.post("/run_explain/")
+async def run_explain_api(request: QueryRequest):
     conn = get_db_connection()
-
-    while True:
-        print("\nМеню:")
-        print("1. Запуск EXPLAIN ANALYZE для запроса")
-        print("2. Анализ статистики запросов и рекомендации для autovacuum")
-        print("3. Рекомендации по настройкам PostgreSQL")
-        print("4. Поиск N+1 кандидатов (pg_stat_statements)")
-        print("5. Рекомендации по индексам")
-        print("6. Выход")
-
-        choice = input("Выберите опцию: ")
-
-        if choice == "1":
-            query = input("Введите SQL запрос: ")
-            execute(run_explain, query, conn)
-        elif choice == "2":
-            execute(analyze_stats, conn=conn)
-        elif choice == "3":
-            execute(get_postgres_recommendations, conn)
-        elif choice == "4":
-            execute(analyze_n_plus_one, conn)
-        elif choice == "5":
-            query = input("Введите SQL запрос: ")
-            execute(analyze_indexes, query, conn)
-        elif choice == "6":
-            print("Выход из программы...")
-            break
-        else:
-            print("Неверный выбор, попробуйте снова.")
-
-    conn.close()
+    try:
+        query = request.query
+        result = run_explain(query, conn)
+        return {"result": result}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
-if __name__ == "__main__":
-    menu()
+@app.post("/analyze_stats/")
+async def analyze_stats_api():
+    conn = get_db_connection()
+    try:
+        result = analyze_stats(conn)
+        print("FEFEFEFFE")
+        return {"result": result}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/get_postgres_recommendations/")
+async def get_postgres_recommendations_api():
+    conn = get_db_connection()
+    try:
+        result = get_postgres_recommendations(conn)
+        return {"recommendations": result}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/analyze_n_plus_one/")
+async def analyze_n_plus_one_api():
+    conn = get_db_connection()
+    try:
+        result = analyze_n_plus_one(conn)
+        return {"n_plus_one_candidates": result}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/analyze_indexes/")
+async def analyze_indexes_api(request: QueryRequest):
+    conn = get_db_connection()
+    try:
+        query = request.query
+        result = analyze_indexes(query, conn)
+        return {"index_recommendations": result}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/exit/")
+async def exit_program():
+    print("Выход из программы...")
+    return {"message": "Exiting program..."}

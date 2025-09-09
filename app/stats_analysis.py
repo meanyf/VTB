@@ -92,5 +92,5 @@ def analyze_stats(conn):
     result = {"query_summary": agg, "recommendations": recs}
 
     print(json.dumps(result, indent=4, ensure_ascii=False))
-
     cur.close()
+    return result

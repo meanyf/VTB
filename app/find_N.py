@@ -141,13 +141,14 @@ def analyze_n_plus_one(conn):
     results = sorted(results, key=lambda x: (-x["calls"], x["rows_per_call"]))
 
     if not results:
-        print(
+        message = (
             "Кандидаты не найдены.\n"
             "- Убедитесь, что pg_stat_statements.track = 'all'.\n"
             "- Выполните подозрительный код (например, DO-блок с 50 SELECT) для теста.\n"
             "- При необходимости увеличьте LIMIT или уменьшите MIN_CALLS."
         )
-        return
+        print(message)
+        return message
 
     for i, c in enumerate(results[:MAX_CANDIDATES], 1):
         print(
@@ -157,3 +158,4 @@ def analyze_n_plus_one(conn):
         print("snippet:", c["query_snippet"])
         print("matched:", c["matched"])
         print("suggestion:\n", c["suggestion"])
+    return results

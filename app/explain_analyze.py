@@ -68,8 +68,15 @@ def print_plan_node(node, indent=0):
 def run_explain(query, conn, label="EXPLAIN"):
     print(f"\n=== {label} ===")
     cur = conn.cursor(row_factory=rows.dict_row)
-    cur.execute(f"EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) {query}")
+    try:
+        # Проверяем корректность запроса через EXPLAIN
+        cur.execute(f"EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) {query}")
+    except Exception as e:
+        print(f"❌ Ошибка в SQL запросе: {e}")
+        return f"❌ Ошибка в SQL запросе: {e}"
+    
     plan_raw = cur.fetchone()["QUERY PLAN"]
     top_plan = plan_raw[0]["Plan"]
     print_plan_node(top_plan)
     cur.close()
+    return top_plan
